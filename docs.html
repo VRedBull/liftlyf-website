@@ -1,0 +1,1431 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Liftlyf Documentation | Architecture & Engineering</title>
+
+  <meta
+    name="description"
+    content="Technical documentation for Liftlyf covering Android architecture, backend services, APIs, authentication, databases, Docker, Oracle Cloud and CI/CD."
+  >
+
+  <link rel="icon" type="image/png" href="favicon.png">
+
+  <style>
+
+    /* =========================
+       RESET
+    ========================== */
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #0f1115;
+      color: #f5f5f5;
+      line-height: 1.7;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+
+    /* =========================
+       NAVIGATION
+    ========================== */
+
+    nav {
+      height: 70px;
+      padding: 0 7%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      position: sticky;
+      top: 0;
+
+      background: rgba(15, 17, 21, 0.97);
+      border-bottom: 1px solid #262b33;
+
+      z-index: 100;
+    }
+
+    .logo {
+      font-size: 25px;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    .logo span {
+      color: #4ade80;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      font-size: 14px;
+      color: #aeb3bd;
+    }
+
+    .nav-links a:hover {
+      color: #4ade80;
+    }
+
+
+    /* =========================
+       PAGE LAYOUT
+    ========================== */
+
+    .page {
+      max-width: 1450px;
+      margin: auto;
+
+      display: grid;
+      grid-template-columns: 240px minmax(0, 1fr);
+
+      gap: 70px;
+
+      padding: 70px 7% 100px;
+    }
+
+
+    /* =========================
+       SIDEBAR
+    ========================== */
+
+    .sidebar {
+      position: sticky;
+      top: 100px;
+      height: fit-content;
+    }
+
+    .sidebar-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+
+      color: #737985;
+
+      margin-bottom: 15px;
+    }
+
+    .sidebar a {
+      display: block;
+
+      padding: 7px 0;
+
+      color: #a1a7b0;
+      font-size: 14px;
+
+      transition: 0.2s;
+    }
+
+    .sidebar a:hover {
+      color: #4ade80;
+      padding-left: 5px;
+    }
+
+
+    /* =========================
+       CONTENT
+    ========================== */
+
+    .content {
+      max-width: 900px;
+    }
+
+    .label {
+      color: #4ade80;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+
+      margin-bottom: 15px;
+    }
+
+    .title {
+      font-size: clamp(45px, 6vw, 75px);
+      line-height: 1.05;
+      letter-spacing: -3px;
+
+      margin-bottom: 25px;
+    }
+
+    .intro {
+      color: #aeb3bd;
+      font-size: 19px;
+      max-width: 780px;
+
+      margin-bottom: 70px;
+    }
+
+
+    /* =========================
+       DOCUMENT SECTIONS
+    ========================== */
+
+    .section {
+      margin-bottom: 100px;
+      scroll-margin-top: 100px;
+    }
+
+    .section h2 {
+      font-size: 34px;
+      letter-spacing: -1px;
+
+      margin-bottom: 20px;
+    }
+
+    .section h3 {
+      font-size: 20px;
+
+      margin-top: 35px;
+      margin-bottom: 12px;
+    }
+
+    .section p {
+      color: #b4bac3;
+      margin-bottom: 18px;
+    }
+
+    .section ul {
+      margin: 15px 0 20px 22px;
+      color: #b4bac3;
+    }
+
+    .section li {
+      margin-bottom: 8px;
+    }
+
+
+    /* =========================
+       STACK TABLE
+    ========================== */
+
+    .stack-table {
+      width: 100%;
+      border-collapse: collapse;
+
+      margin-top: 30px;
+
+      border: 1px solid #292e36;
+      border-radius: 12px;
+
+      overflow: hidden;
+    }
+
+    .stack-table th,
+    .stack-table td {
+      padding: 16px;
+      text-align: left;
+
+      border-bottom: 1px solid #292e36;
+    }
+
+    .stack-table th {
+      background: #171b21;
+      color: #ffffff;
+      font-size: 14px;
+    }
+
+    .stack-table td {
+      background: #13161b;
+      color: #aeb3bd;
+      font-size: 14px;
+    }
+
+
+    /* =========================
+       CARDS
+    ========================== */
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+
+      margin-top: 30px;
+    }
+
+    .card {
+      background: #16191f;
+      border: 1px solid #292e36;
+
+      padding: 25px;
+      border-radius: 12px;
+    }
+
+    .card h3 {
+      margin-top: 0;
+      font-size: 18px;
+    }
+
+    .card p {
+      font-size: 14px;
+      color: #9da3ad;
+      margin-bottom: 0;
+    }
+
+
+    /* =========================
+       ARCHITECTURE DIAGRAM
+    ========================== */
+
+    .architecture {
+      margin-top: 30px;
+
+      padding: 30px;
+
+      background: #12151a;
+      border: 1px solid #292e36;
+
+      border-radius: 14px;
+    }
+
+    .layer {
+      padding: 18px;
+
+      text-align: center;
+
+      background: #191d23;
+      border: 1px solid #303640;
+
+      border-radius: 8px;
+
+      font-weight: 600;
+    }
+
+    .arrow {
+      text-align: center;
+
+      color: #4ade80;
+      font-size: 24px;
+
+      margin: 10px 0;
+    }
+
+
+    /* =========================
+       FLOW BOX
+    ========================== */
+
+    .flow {
+      margin-top: 25px;
+
+      padding: 25px;
+
+      background: #090b0e;
+      border: 1px solid #292e36;
+
+      border-radius: 10px;
+
+      font-family: Consolas, monospace;
+      font-size: 14px;
+
+      color: #b8bec7;
+
+      white-space: pre-line;
+    }
+
+
+    /* =========================
+       CALLOUT
+    ========================== */
+
+    .callout {
+      margin-top: 25px;
+
+      padding: 20px;
+
+      border-left: 3px solid #4ade80;
+
+      background: #142019;
+
+      color: #c5d5ca;
+
+      border-radius: 6px;
+    }
+
+    .warning {
+      border-left-color: #facc15;
+      background: #211f13;
+      color: #ddd4a6;
+    }
+
+
+    /* =========================
+       TECH TAGS
+    ========================== */
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+
+      margin-top: 25px;
+    }
+
+    .tag {
+      padding: 8px 13px;
+
+      background: #171b21;
+      border: 1px solid #303640;
+
+      border-radius: 7px;
+
+      color: #c2c8d0;
+      font-size: 13px;
+    }
+
+
+    /* =========================
+       FOOTER
+    ========================== */
+
+    footer {
+      border-top: 1px solid #252a32;
+      padding: 40px 7%;
+
+      color: #858b96;
+      font-size: 14px;
+    }
+
+    .footer-content {
+      max-width: 1400px;
+      margin: auto;
+
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      flex-wrap: wrap;
+      gap: 25px;
+    }
+
+    .footer-brand {
+      color: white;
+      font-weight: 700;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    .footer-links a:hover {
+      color: #4ade80;
+    }
+
+
+    /* =========================
+       MOBILE
+    ========================== */
+
+    @media (max-width: 950px) {
+
+      .page {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+
+      .sidebar {
+        position: static;
+        border-bottom: 1px solid #292e36;
+        padding-bottom: 25px;
+      }
+
+      .sidebar-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+      }
+
+      .sidebar a {
+        padding: 0;
+      }
+
+    }
+
+    @media (max-width: 700px) {
+
+      nav {
+        padding: 0 6%;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .page {
+        padding: 50px 6% 80px;
+      }
+
+      .card-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stack-table {
+        font-size: 12px;
+      }
+
+      .stack-table th,
+      .stack-table td {
+        padding: 12px;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+  <!-- NAVIGATION -->
+
+  <nav>
+
+    <a href="index.html" class="logo">
+      Lift<span>lyf</span>
+    </a>
+
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#android">Android</a>
+      <a href="#backend">Backend</a>
+    </div>
+
+  </nav>
+
+
+  <main class="page">
+
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+      <div class="sidebar-title">
+        Documentation
+      </div>
+
+      <div class="sidebar-links">
+
+        <a href="#overview">01. Overview</a>
+        <a href="#architecture">02. Architecture</a>
+        <a href="#android">03. Android Application</a>
+        <a href="#data-flow">04. Data Flow</a>
+        <a href="#api">05. API Layer</a>
+        <a href="#backend">06. Backend</a>
+        <a href="#security">07. Authentication & Security</a>
+        <a href="#database">08. Database</a>
+        <a href="#deployment">09. Deployment</a>
+        <a href="#cicd">10. CI/CD</a>
+        <a href="#decisions">11. Engineering Decisions</a>
+        <a href="#roadmap">12. Roadmap</a>
+
+      </div>
+
+    </aside>
+
+
+    <!-- CONTENT -->
+
+    <div class="content">
+
+
+      <div class="label">
+        Liftlyf Technical Documentation
+      </div>
+
+      <h1 class="title">
+        Engineering the Liftlyf platform.
+      </h1>
+
+      <p class="intro">
+        Liftlyf is a full-stack workout tracking application. The project
+        combines native Android development, local data persistence,
+        HTTP-based APIs, backend services, authentication, relational
+        databases, containerization and cloud deployment.
+      </p>
+
+
+      <!-- OVERVIEW -->
+
+      <section id="overview" class="section">
+
+        <h2>01. Project Overview</h2>
+
+        <p>
+          Liftlyf is designed around a simple product goal: provide users
+          with a focused way to record workouts and maintain a history of
+          their training.
+        </p>
+
+        <p>
+          From an engineering perspective, the project extends beyond the
+          Android application itself. It includes a client application,
+          backend services, persistent data storage and hosted infrastructure.
+        </p>
+
+        <table class="stack-table">
+
+          <thead>
+            <tr>
+              <th>Layer</th>
+              <th>Technology</th>
+              <th>Responsibility</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            <tr>
+              <td>Mobile Client</td>
+              <td>Kotlin / Jetpack Compose</td>
+              <td>User interface and application logic</td>
+            </tr>
+
+            <tr>
+              <td>Local Storage</td>
+              <td>Room</td>
+              <td>On-device structured persistence</td>
+            </tr>
+
+            <tr>
+              <td>Networking</td>
+              <td>Retrofit / HTTP</td>
+              <td>Communication with backend APIs</td>
+            </tr>
+
+            <tr>
+              <td>Backend</td>
+              <td>Spring Boot</td>
+              <td>Business logic and server-side services</td>
+            </tr>
+
+            <tr>
+              <td>Security</td>
+              <td>Spring Security / JWT</td>
+              <td>Authentication and protected endpoints</td>
+            </tr>
+
+            <tr>
+              <td>Database</td>
+              <td>PostgreSQL</td>
+              <td>Persistent server-side relational data</td>
+            </tr>
+
+            <tr>
+              <td>Containerization</td>
+              <td>Docker</td>
+              <td>Portable backend runtime environment</td>
+            </tr>
+
+            <tr>
+              <td>Cloud</td>
+              <td>Oracle Cloud Infrastructure</td>
+              <td>Hosted backend infrastructure</td>
+            </tr>
+
+            <tr>
+              <td>Automation</td>
+              <td>GitHub Actions</td>
+              <td>Build and deployment automation</td>
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </section>
+
+
+      <!-- ARCHITECTURE -->
+
+      <section id="architecture" class="section">
+
+        <h2>02. System Architecture</h2>
+
+        <p>
+          Liftlyf follows a distributed client-server architecture.
+          The Android application acts as the client, while the backend
+          provides server-side services and persistent data access.
+        </p>
+
+        <div class="architecture">
+
+          <div class="layer">
+            Android Client
+            <br>
+            <small>Kotlin + Jetpack Compose</small>
+          </div>
+
+          <div class="arrow">↓</div>
+
+          <div class="layer">
+            Application Data Layer
+            <br>
+            <small>Repositories / Local Storage / Network</small>
+          </div>
+
+          <div class="arrow">↓</div>
+
+          <div class="layer">
+            REST API Communication
+            <br>
+            <small>HTTP + Retrofit</small>
+          </div>
+
+          <div class="arrow">↓</div>
+
+          <div class="layer">
+            Spring Boot Backend
+            <br>
+            <small>Controllers → Services → Persistence</small>
+          </div>
+
+          <div class="arrow">↓</div>
+
+          <div class="layer">
+            PostgreSQL Database
+          </div>
+
+        </div>
+
+        <div class="callout">
+
+          The main architectural separation is intentional: presentation,
+          client-side data handling, network communication, business logic
+          and persistent storage should remain independently maintainable.
+
+        </div>
+
+      </section>
+
+
+      <!-- ANDROID -->
+
+      <section id="android" class="section">
+
+        <h2>03. Android Application</h2>
+
+        <p>
+          The Android client is built using Kotlin and Jetpack Compose.
+          Jetpack Compose provides a declarative approach to constructing
+          the application's user interface.
+        </p>
+
+        <h3>Presentation Layer</h3>
+
+        <p>
+          The presentation layer is responsible for displaying application
+          state and receiving user interactions. Screens represent the user
+          interface for features such as workout tracking, exercise
+          management and workout history.
+        </p>
+
+        <h3>State Management</h3>
+
+        <p>
+          Application state should flow in a predictable direction:
+          user interaction produces an event, application logic processes
+          that event, the underlying data changes and the UI reflects the
+          updated state.
+        </p>
+
+        <div class="flow">
+User Interaction
+      ↓
+UI Event
+      ↓
+Application Logic
+      ↓
+Repository / Data Source
+      ↓
+Local Storage or Backend
+      ↓
+Updated Application State
+      ↓
+UI Recomposition
+        </div>
+
+        <h3>Local Persistence</h3>
+
+        <p>
+          Room provides structured local persistence on Android. A local
+          database allows application data to be stored on the device rather
+          than existing only in temporary memory.
+        </p>
+
+        <div class="card-grid">
+
+          <div class="card">
+            <h3>Jetpack Compose</h3>
+            <p>
+              Declarative UI framework responsible for rendering application
+              screens from state.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>Room</h3>
+            <p>
+              Provides an abstraction over SQLite for structured local
+              application data.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>Retrofit</h3>
+            <p>
+              Provides typed HTTP communication between the Android client
+              and backend APIs.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>Kotlin</h3>
+            <p>
+              Primary language for Android application development and
+              application logic.
+            </p>
+          </div>
+
+        </div>
+
+      </section>
+
+
+     <!-- DATA FLOW -->
+
+<section id="data-flow" class="section">
+
+  <h2>04. Offline-First Data & Synchronization</h2>
+
+  <p>
+    Liftlyf uses a local-first architecture for workout data. The Android
+    application does not depend on a network request every time a user
+    records a workout. Workout data is first written to the local Room
+    database, allowing the application to remain responsive and usable
+    without a continuous internet connection.
+  </p>
+
+  <h3>Local-First Workflow</h3>
+
+  <div class="flow">
+User records workout data
+        ↓
+Android application processes the update
+        ↓
+Data is written to Room
+        ↓
+UI reads the updated local state
+        ↓
+Workout remains available on the device
+        ↓
+Synchronization process sends data to backend
+        ↓
+Spring Boot processes sync request
+        ↓
+PostgreSQL is updated
+  </div>
+
+  <p>
+    Room acts as the application's local data layer, while PostgreSQL
+    provides persistent server-side storage. This separation allows the
+    Android application to operate independently of immediate network
+    availability.
+  </p>
+
+  <h3>Why Local-First?</h3>
+
+  <ul>
+    <li>Workout logging does not need to wait for a network request.</li>
+    <li>The UI can immediately reflect changes stored locally.</li>
+    <li>The application remains usable during temporary connectivity loss.</li>
+    <li>Network synchronization can occur independently of user interaction.</li>
+    <li>Remote storage provides a server-side copy of synchronized data.</li>
+  </ul>
+
+</section>
+
+
+<!-- SYNC API -->
+
+<section id="sync-api" class="section">
+
+  <h2>05. Synchronization API</h2>
+
+  <p>
+    Synchronization between the Android application and the backend is
+    performed through the API layer. The Android client communicates with
+    the Liftlyf backend using Retrofit and HTTP-based requests.
+  </p>
+
+  <div class="flow">
+Room Database
+      ↓
+Repository / Synchronization Logic
+      ↓
+Retrofit
+      ↓
+HTTP Request
+      ↓
+Liftlyf Sync API
+      ↓
+Spring Boot
+      ↓
+Service Layer
+      ↓
+Persistence Layer
+      ↓
+PostgreSQL
+      ↓
+Sync Response
+      ↓
+Android Application
+  </div>
+
+  <h3>Synchronization Responsibilities</h3>
+
+  <p>
+    The synchronization layer acts as a boundary between the local Android
+    database and the remote backend. Instead of exposing the Room database
+    directly to the server, the client sends structured API requests.
+  </p>
+
+  <ul>
+    <li>Collect local workout data that requires synchronization.</li>
+    <li>Serialize application data into API request objects.</li>
+    <li>Send synchronization requests using Retrofit.</li>
+    <li>Authenticate and validate requests at the backend.</li>
+    <li>Process incoming data through the backend service layer.</li>
+    <li>Persist synchronized data in PostgreSQL.</li>
+    <li>Return a response indicating the result of synchronization.</li>
+  </ul>
+
+  <h3>Conceptual Sync Request</h3>
+
+  <div class="flow">
+Android
+  ↓
+POST / sync endpoint
+  ↓
+Authorization handled by Spring Security
+  ↓
+Request validated
+  ↓
+Controller receives synchronization request
+  ↓
+Service processes workout data
+  ↓
+PostgreSQL records created or updated
+  ↓
+Response returned to Android
+  </div>
+
+  <p>
+    The API acts as a synchronization boundary. The Android application
+    communicates with the backend through structured request and response
+    objects rather than directly accessing PostgreSQL.
+  </p>
+
+</section>
+
+
+      <!-- API -->
+
+      <section id="api" class="section">
+
+        <h2>05. API Layer</h2>
+
+        <p>
+          Communication between the Android application and backend is based
+          on HTTP requests and REST-style APIs.
+        </p>
+
+        <h3>Request Lifecycle</h3>
+
+        <div class="flow">
+Android Application
+      ↓
+Retrofit creates HTTP request
+      ↓
+Request reaches backend endpoint
+      ↓
+Spring Security processes request
+      ↓
+Controller receives valid request
+      ↓
+Service layer executes business logic
+      ↓
+Persistence layer interacts with PostgreSQL
+      ↓
+Backend creates response
+      ↓
+HTTP response returned to Android client
+        </div>
+
+        <h3>Separation of Responsibilities</h3>
+
+        <ul>
+          <li><strong>Client:</strong> user interaction and presentation.</li>
+          <li><strong>API layer:</strong> transport boundary between client and server.</li>
+          <li><strong>Controller:</strong> request handling and endpoint coordination.</li>
+          <li><strong>Service:</strong> business logic and domain operations.</li>
+          <li><strong>Persistence:</strong> database interaction.</li>
+        </ul>
+
+      </section>
+
+
+      <!-- BACKEND -->
+
+      <section id="backend" class="section">
+
+        <h2>06. Backend Architecture</h2>
+
+        <p>
+          The Liftlyf backend is built using Spring Boot. Its role is to
+          expose application services through APIs and provide a server-side
+          boundary for business logic and persistent data access.
+        </p>
+
+        <div class="flow">
+HTTP Request
+      ↓
+Spring Security Filter Chain
+      ↓
+Controller
+      ↓
+Service Layer
+      ↓
+Repository / Persistence Layer
+      ↓
+PostgreSQL
+      ↓
+Response DTO / HTTP Response
+        </div>
+
+        <h3>Controller Layer</h3>
+
+        <p>
+          Controllers define the API boundary. They receive requests,
+          validate or map incoming data and delegate business operations
+          to the service layer.
+        </p>
+
+        <h3>Service Layer</h3>
+
+        <p>
+          The service layer represents the natural location for server-side
+          business logic. This keeps controllers focused on HTTP concerns
+          rather than application rules.
+        </p>
+
+        <h3>Persistence Layer</h3>
+
+        <p>
+          Database access is separated from higher-level application logic.
+          This separation improves maintainability and keeps SQL or
+          persistence concerns isolated from API and business logic.
+        </p>
+
+      </section>
+
+
+      <!-- SECURITY -->
+
+      <section id="security" class="section">
+
+        <h2>07. Authentication & Security</h2>
+
+        <p>
+          The backend uses Spring Security as the foundation for protecting
+          application resources. JWT-based authentication provides a
+          mechanism for authenticated clients to prove identity when calling
+          protected endpoints.
+        </p>
+
+        <h3>Conceptual Authentication Flow</h3>
+
+        <div class="flow">
+User authenticates
+      ↓
+Backend validates credentials
+      ↓
+Backend issues authentication token
+      ↓
+Client sends token with protected requests
+      ↓
+Backend security layer validates token
+      ↓
+Authenticated request continues
+        </div>
+
+        <div class="warning callout">
+
+          Implementation details such as token expiration, refresh-token
+          support and the exact client-side storage mechanism should be
+          documented according to the actual Liftlyf implementation rather
+          than assumed.
+
+        </div>
+
+        <h3>Security Responsibilities</h3>
+
+        <ul>
+          <li>Authentication of users.</li>
+          <li>Protection of authenticated API endpoints.</li>
+          <li>Validation of authentication tokens.</li>
+          <li>Authorization rules where applicable.</li>
+          <li>Separation of public and protected resources.</li>
+        </ul>
+
+      </section>
+
+
+      <!-- DATABASE -->
+
+      <section id="database" class="section">
+
+        <h2>08. Database Architecture</h2>
+
+        <p>
+          PostgreSQL is used as the backend relational database. Relational
+          storage is suitable for structured application data and
+          relationships between application entities.
+        </p>
+
+        <h3>Typical Data Relationships</h3>
+
+        <div class="flow">
+User
+  ↓
+Workout
+  ↓
+Workout Exercise
+  ↓
+Exercise Sets
+
+Example logical relationship:
+
+User
+  └── Workouts
+        └── Exercises performed
+              └── Individual sets / repetitions / weight
+        </div>
+
+        <p>
+          The exact schema should be treated as an implementation detail and
+          should evolve with application requirements. The important
+          architectural principle is maintaining clear ownership and
+          relationships between persistent entities.
+        </p>
+
+        <h3>Local vs Server Storage</h3>
+
+        <div class="card-grid">
+
+          <div class="card">
+            <h3>Room</h3>
+            <p>
+              Provides structured on-device storage for Android application
+              data and local persistence.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>PostgreSQL</h3>
+            <p>
+              Provides persistent relational storage for backend-managed
+              application data.
+            </p>
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- DEPLOYMENT -->
+
+      <section id="deployment" class="section">
+
+        <h2>09. Deployment & Infrastructure</h2>
+
+        <p>
+          The Liftlyf backend is containerized using Docker and hosted on
+          Oracle Cloud Infrastructure.
+        </p>
+
+        <div class="architecture">
+
+          <div class="layer">
+            Source Code Repository
+          </div>
+
+          <div class="arrow">↓</div>
+
+          <div class="layer">
+            Backend Build
+          </div>
+
+          <div class="arrow">↓</div>
+
+          <div class="layer">
+            Docker Image
+          </div>
+
+          <div class="arrow">↓</div>
+
+          <div class="layer">
+            Oracle Cloud VM
+          </div>
+
+          <div class="arrow">↓</div>
+
+          <div class="layer">
+            Running Docker Container
+          </div>
+
+          <div class="arrow">↓</div>
+
+          <div class="layer">
+            Hosted Backend API
+          </div>
+
+        </div>
+
+        <h3>Why Containerization?</h3>
+
+        <ul>
+          <li>Provides a consistent runtime environment.</li>
+          <li>Reduces differences between development and deployment environments.</li>
+          <li>Packages application dependencies with the application.</li>
+          <li>Simplifies deployment and replacement of backend versions.</li>
+        </ul>
+
+        <h3>Cloud Infrastructure</h3>
+
+        <p>
+          Hosting the backend on a cloud VM moves Liftlyf beyond a purely
+          local development environment. The backend can run independently
+          of the developer's local machine and serve remote application
+          clients.
+        </p>
+
+      </section>
+
+
+      <!-- CI/CD -->
+
+      <section id="cicd" class="section">
+
+        <h2>10. CI/CD & Automation</h2>
+
+        <p>
+          GitHub Actions provides an automation layer around the project's
+          development and deployment workflow.
+        </p>
+
+        <div class="flow">
+Developer pushes code
+      ↓
+GitHub repository receives change
+      ↓
+GitHub Actions workflow starts
+      ↓
+Build / Test / Automation steps
+      ↓
+Deployment workflow
+      ↓
+Updated application or backend
+        </div>
+
+        <h3>Automation Goals</h3>
+
+        <ul>
+          <li>Reduce manual repetitive work.</li>
+          <li>Standardize build processes.</li>
+          <li>Make deployment more repeatable.</li>
+          <li>Create a foundation for future automated testing.</li>
+        </ul>
+
+      </section>
+
+
+      <!-- ENGINEERING DECISIONS -->
+
+      <section id="decisions" class="section">
+
+        <h2>11. Engineering Decisions</h2>
+
+        <h3>Native Android Development</h3>
+
+        <p>
+          Kotlin and Jetpack Compose provide a modern native Android stack.
+          This allows Liftlyf to use platform-native APIs while maintaining
+          a declarative UI architecture.
+        </p>
+
+        <h3>Client-Server Separation</h3>
+
+        <p>
+          A dedicated backend prevents all application logic and persistence
+          concerns from being embedded directly inside the mobile client.
+          The client and server can therefore evolve independently.
+        </p>
+
+        <h3>Local Persistence</h3>
+
+        <p>
+          Using Room creates a structured approach to on-device data
+          persistence and supports an architecture where application state
+          does not depend exclusively on temporary memory.
+        </p>
+
+        <h3>Containerized Backend</h3>
+
+        <p>
+          Docker provides a reproducible runtime environment and makes the
+          backend easier to package and deploy.
+        </p>
+
+        <h3>Cloud Hosting</h3>
+
+        <p>
+          Running the backend on Oracle Cloud introduces production-style
+          infrastructure concerns such as server availability, networking,
+          deployment and operational maintenance.
+        </p>
+
+      </section>
+
+
+      <!-- ROADMAP -->
+
+      <section id="roadmap" class="section">
+
+        <h2>12. Future Engineering Roadmap</h2>
+
+        <p>
+          Liftlyf will continue evolving beyond the initial production
+          version. Planned areas include both product features and technical
+          improvements.
+        </p>
+
+        <div class="card-grid">
+
+          <div class="card">
+            <h3>Progress Analytics</h3>
+            <p>
+              Visualizations and data analysis for long-term training
+              history.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>Cardio & Timers</h3>
+            <p>
+              Additional workout modes, rest timers and cardio-focused
+              tracking.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>Push Notifications</h3>
+            <p>
+              Workout reminders and notification infrastructure.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>AI Features</h3>
+            <p>
+              Future intelligent features to support users with training
+              insights and assistance.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>Infrastructure</h3>
+            <p>
+              Continued improvements to monitoring, reliability and
+              deployment automation.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>Observability</h3>
+            <p>
+              Better application logging, error reporting and backend
+              monitoring.
+            </p>
+          </div>
+
+        </div>
+
+        <div class="callout">
+
+          Liftlyf is intended to remain an evolving engineering project.
+          The documentation will be updated as the application architecture,
+          features and infrastructure develop.
+
+        </div>
+
+      </section>
+
+
+    </div>
+
+  </main>
+
+
+  <!-- FOOTER -->
+
+  <footer>
+
+    <div class="footer-content">
+
+      <div>
+        <div class="footer-brand">Liftlyf</div>
+        <div>Technical Documentation</div>
+      </div>
+
+      <div class="footer-links">
+        <a href="index.html">Home</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+      </div>
+
+      <div>
+        © 2026 Liftlyf
+      </div>
+
+    </div>
+
+  </footer>
+
+
+</body>
+
+</html>
