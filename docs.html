@@ -9,7 +9,7 @@
 
   <meta
     name="description"
-    content="Technical documentation for Liftlyf covering Android architecture, backend services, APIs, authentication, databases, Docker, Oracle Cloud and CI/CD."
+    content="Technical documentation for Liftlyf covering Android architecture, local storage, synchronization, backend services, APIs, authentication, PostgreSQL, Docker, Cloudflare, Oracle Cloud and CI/CD."
   >
 
   <link rel="icon" type="image/png" href="favicon.png">
@@ -309,6 +309,11 @@
       font-weight: 600;
     }
 
+    .layer small {
+      color: #9da3ad;
+      font-weight: normal;
+    }
+
     .arrow {
       text-align: center;
 
@@ -358,37 +363,6 @@
       color: #c5d5ca;
 
       border-radius: 6px;
-    }
-
-    .warning {
-      border-left-color: #facc15;
-      background: #211f13;
-      color: #ddd4a6;
-    }
-
-
-    /* =========================
-       TECH TAGS
-    ========================== */
-
-    .tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-
-      margin-top: 25px;
-    }
-
-    .tag {
-      padding: 8px 13px;
-
-      background: #171b21;
-      border: 1px solid #303640;
-
-      border-radius: 7px;
-
-      color: #c2c8d0;
-      font-size: 13px;
     }
 
 
@@ -531,8 +505,8 @@
         <a href="#overview">01. Overview</a>
         <a href="#architecture">02. Architecture</a>
         <a href="#android">03. Android Application</a>
-        <a href="#data-flow">04. Data Flow</a>
-        <a href="#api">05. API Layer</a>
+        <a href="#data-flow">04. Data Synchronization</a>
+        <a href="#sync-api">05. Synchronization API</a>
         <a href="#backend">06. Backend</a>
         <a href="#security">07. Authentication & Security</a>
         <a href="#database">08. Database</a>
@@ -562,8 +536,9 @@
       <p class="intro">
         Liftlyf is a full-stack workout tracking application. The project
         combines native Android development, local data persistence,
-        HTTP-based APIs, backend services, authentication, relational
-        databases, containerization and cloud deployment.
+        offline-first synchronization, HTTP-based APIs, backend services,
+        authentication, relational databases, containerization and cloud
+        deployment.
       </p>
 
 
@@ -581,8 +556,10 @@
 
         <p>
           From an engineering perspective, the project extends beyond the
-          Android application itself. It includes a client application,
-          backend services, persistent data storage and hosted infrastructure.
+          Android application itself. It includes a native mobile client,
+          local data persistence, synchronization APIs, backend services,
+          authentication, persistent relational storage and hosted cloud
+          infrastructure.
         </p>
 
         <table class="stack-table">
@@ -640,7 +617,13 @@
             </tr>
 
             <tr>
-              <td>Cloud</td>
+              <td>Domain / DNS</td>
+              <td>Cloudflare</td>
+              <td>Domain and DNS management for Liftlyf services</td>
+            </tr>
+
+            <tr>
+              <td>Cloud Hosting</td>
               <td>Oracle Cloud Infrastructure</td>
               <td>Hosted backend infrastructure</td>
             </tr>
@@ -665,15 +648,16 @@
         <h2>02. System Architecture</h2>
 
         <p>
-          Liftlyf follows a distributed client-server architecture.
-          The Android application acts as the client, while the backend
-          provides server-side services and persistent data access.
+          Liftlyf follows a client-server architecture. The Android
+          application acts as the client and maintains local application
+          data, while the backend provides server-side services,
+          authentication and persistent remote storage.
         </p>
 
         <div class="architecture">
 
           <div class="layer">
-            Android Client
+            Android Application
             <br>
             <small>Kotlin + Jetpack Compose</small>
           </div>
@@ -681,17 +665,17 @@
           <div class="arrow">↓</div>
 
           <div class="layer">
-            Application Data Layer
+            Local Data Layer
             <br>
-            <small>Repositories / Local Storage / Network</small>
+            <small>Room Database</small>
           </div>
 
           <div class="arrow">↓</div>
 
           <div class="layer">
-            REST API Communication
+            Synchronization Layer
             <br>
-            <small>HTTP + Retrofit</small>
+            <small>Repository + Retrofit + HTTP</small>
           </div>
 
           <div class="arrow">↓</div>
@@ -712,9 +696,9 @@
 
         <div class="callout">
 
-          The main architectural separation is intentional: presentation,
-          client-side data handling, network communication, business logic
-          and persistent storage should remain independently maintainable.
+          The architecture separates presentation, local persistence,
+          synchronization, API communication, backend business logic and
+          server-side storage into distinct layers.
 
         </div>
 
@@ -728,9 +712,9 @@
         <h2>03. Android Application</h2>
 
         <p>
-          The Android client is built using Kotlin and Jetpack Compose.
-          Jetpack Compose provides a declarative approach to constructing
-          the application's user interface.
+          The Liftlyf Android client is built using Kotlin and Jetpack
+          Compose. Jetpack Compose provides a declarative approach to
+          constructing the application's user interface.
         </p>
 
         <h3>Presentation Layer</h3>
@@ -742,14 +726,7 @@
           management and workout history.
         </p>
 
-        <h3>State Management</h3>
-
-        <p>
-          Application state should flow in a predictable direction:
-          user interaction produces an event, application logic processes
-          that event, the underlying data changes and the UI reflects the
-          updated state.
-        </p>
+        <h3>State & Data Flow</h3>
 
         <div class="flow">
 User Interaction
@@ -758,21 +735,20 @@ UI Event
       ↓
 Application Logic
       ↓
-Repository / Data Source
+Repository / Data Layer
       ↓
-Local Storage or Backend
+Room Database
       ↓
-Updated Application State
+Updated Local State
       ↓
 UI Recomposition
         </div>
 
-        <h3>Local Persistence</h3>
-
         <p>
-          Room provides structured local persistence on Android. A local
-          database allows application data to be stored on the device rather
-          than existing only in temporary memory.
+          The local database acts as part of the application's primary data
+          layer, allowing the user interface to work with persisted local
+          state rather than depending on every action completing through a
+          remote network request.
         </p>
 
         <div class="card-grid">
@@ -781,23 +757,22 @@ UI Recomposition
             <h3>Jetpack Compose</h3>
             <p>
               Declarative UI framework responsible for rendering application
-              screens from state.
+              screens from application state.
             </p>
           </div>
 
           <div class="card">
             <h3>Room</h3>
             <p>
-              Provides an abstraction over SQLite for structured local
-              application data.
+              Structured on-device persistence built on top of SQLite.
             </p>
           </div>
 
           <div class="card">
             <h3>Retrofit</h3>
             <p>
-              Provides typed HTTP communication between the Android client
-              and backend APIs.
+              Typed HTTP communication between the Android client and
+              Liftlyf backend APIs.
             </p>
           </div>
 
@@ -814,23 +789,22 @@ UI Recomposition
       </section>
 
 
-     <!-- DATA FLOW -->
+      <!-- DATA SYNCHRONIZATION -->
 
-<section id="data-flow" class="section">
+      <section id="data-flow" class="section">
 
-  <h2>04. Offline-First Data & Synchronization</h2>
+        <h2>04. Offline-First Data & Synchronization</h2>
 
-  <p>
-    Liftlyf uses a local-first architecture for workout data. The Android
-    application does not depend on a network request every time a user
-    records a workout. Workout data is first written to the local Room
-    database, allowing the application to remain responsive and usable
-    without a continuous internet connection.
-  </p>
+        <p>
+          Liftlyf uses a local-first approach to workout data. When a user
+          records or updates workout information, the application can first
+          work with locally persisted data instead of requiring every user
+          action to wait for a remote backend response.
+        </p>
 
-  <h3>Local-First Workflow</h3>
+        <h3>Local-First Workflow</h3>
 
-  <div class="flow">
+        <div class="flow">
 User records workout data
         ↓
 Android application processes the update
@@ -841,46 +815,59 @@ UI reads the updated local state
         ↓
 Workout remains available on the device
         ↓
-Synchronization process sends data to backend
+Synchronization layer prepares remote request
         ↓
-Spring Boot processes sync request
+Data is sent to the Liftlyf backend
+        ↓
+Spring Boot processes the request
         ↓
 PostgreSQL is updated
-  </div>
+        </div>
 
-  <p>
-    Room acts as the application's local data layer, while PostgreSQL
-    provides persistent server-side storage. This separation allows the
-    Android application to operate independently of immediate network
-    availability.
-  </p>
+        <p>
+          This separates the immediate user experience from remote
+          persistence. The user interacts with locally available data while
+          the synchronization layer is responsible for communication with
+          the backend.
+        </p>
 
-  <h3>Why Local-First?</h3>
+        <h3>Synchronization Responsibilities</h3>
 
-  <ul>
-    <li>Workout logging does not need to wait for a network request.</li>
-    <li>The UI can immediately reflect changes stored locally.</li>
-    <li>The application remains usable during temporary connectivity loss.</li>
-    <li>Network synchronization can occur independently of user interaction.</li>
-    <li>Remote storage provides a server-side copy of synchronized data.</li>
-  </ul>
+        <ul>
+          <li>Maintain locally persisted workout data through Room.</li>
+          <li>Prepare application data for remote synchronization.</li>
+          <li>Convert local application data into API request objects.</li>
+          <li>Send requests to the backend through Retrofit.</li>
+          <li>Receive backend responses after synchronization processing.</li>
+          <li>Maintain a clear boundary between local and remote data layers.</li>
+        </ul>
 
-</section>
+        <div class="callout">
+
+          The synchronization architecture allows local storage and remote
+          persistence to serve different responsibilities: Room supports
+          immediate on-device data access, while PostgreSQL provides
+          server-side persistence through the backend.
+
+        </div>
+
+      </section>
 
 
-<!-- SYNC API -->
+      <!-- SYNC API -->
 
-<section id="sync-api" class="section">
+      <section id="sync-api" class="section">
 
-  <h2>05. Synchronization API</h2>
+        <h2>05. Synchronization API</h2>
 
-  <p>
-    Synchronization between the Android application and the backend is
-    performed through the API layer. The Android client communicates with
-    the Liftlyf backend using Retrofit and HTTP-based requests.
-  </p>
+        <p>
+          Synchronization between the Android application and the Liftlyf
+          backend is performed through the API layer. Retrofit is used by
+          the Android client to communicate with backend endpoints over
+          HTTP.
+        </p>
 
-  <div class="flow">
+        <div class="flow">
 Room Database
       ↓
 Repository / Synchronization Logic
@@ -889,9 +876,11 @@ Retrofit
       ↓
 HTTP Request
       ↓
-Liftlyf Sync API
+Liftlyf Backend API
       ↓
-Spring Boot
+Spring Security
+      ↓
+Controller
       ↓
 Service Layer
       ↓
@@ -899,99 +888,61 @@ Persistence Layer
       ↓
 PostgreSQL
       ↓
-Sync Response
+HTTP Response
       ↓
 Android Application
-  </div>
+        </div>
 
-  <h3>Synchronization Responsibilities</h3>
-
-  <p>
-    The synchronization layer acts as a boundary between the local Android
-    database and the remote backend. Instead of exposing the Room database
-    directly to the server, the client sends structured API requests.
-  </p>
-
-  <ul>
-    <li>Collect local workout data that requires synchronization.</li>
-    <li>Serialize application data into API request objects.</li>
-    <li>Send synchronization requests using Retrofit.</li>
-    <li>Authenticate and validate requests at the backend.</li>
-    <li>Process incoming data through the backend service layer.</li>
-    <li>Persist synchronized data in PostgreSQL.</li>
-    <li>Return a response indicating the result of synchronization.</li>
-  </ul>
-
-  <h3>Conceptual Sync Request</h3>
-
-  <div class="flow">
-Android
-  ↓
-POST / sync endpoint
-  ↓
-Authorization handled by Spring Security
-  ↓
-Request validated
-  ↓
-Controller receives synchronization request
-  ↓
-Service processes workout data
-  ↓
-PostgreSQL records created or updated
-  ↓
-Response returned to Android
-  </div>
-
-  <p>
-    The API acts as a synchronization boundary. The Android application
-    communicates with the backend through structured request and response
-    objects rather than directly accessing PostgreSQL.
-  </p>
-
-</section>
-
-
-      <!-- API -->
-
-      <section id="api" class="section">
-
-        <h2>05. API Layer</h2>
+        <h3>How the Sync Boundary Works</h3>
 
         <p>
-          Communication between the Android application and backend is based
-          on HTTP requests and REST-style APIs.
+          The Android application does not directly connect to PostgreSQL.
+          Room and PostgreSQL exist in different environments and serve
+          different purposes. The synchronization API acts as the controlled
+          boundary between the mobile application's local data and the
+          backend's persistent database.
         </p>
 
-        <h3>Request Lifecycle</h3>
+        <p>
+          Local application data is transformed into structured request data
+          and sent through the backend API. The backend receives the request,
+          applies authentication and application-level processing, then
+          persists the relevant data through its server-side data layer.
+        </p>
+
+        <h3>Conceptual Synchronization Request</h3>
 
         <div class="flow">
 Android Application
       ↓
-Retrofit creates HTTP request
+Synchronization Logic
       ↓
-Request reaches backend endpoint
+Retrofit Request
       ↓
-Spring Security processes request
+HTTP API Request
       ↓
-Controller receives valid request
+Spring Security
       ↓
-Service layer executes business logic
+Sync Controller
       ↓
-Persistence layer interacts with PostgreSQL
+Service Layer
       ↓
-Backend creates response
+Persistence Layer
       ↓
-HTTP response returned to Android client
+PostgreSQL
+      ↓
+Response Returned to Client
         </div>
 
-        <h3>Separation of Responsibilities</h3>
+        <h3>Why Use a Synchronization API?</h3>
 
         <ul>
-          <li><strong>Client:</strong> user interaction and presentation.</li>
-          <li><strong>API layer:</strong> transport boundary between client and server.</li>
-          <li><strong>Controller:</strong> request handling and endpoint coordination.</li>
-          <li><strong>Service:</strong> business logic and domain operations.</li>
-          <li><strong>Persistence:</strong> database interaction.</li>
+          <li>The Android application remains independent from PostgreSQL.</li>
+          <li>Database credentials are never exposed directly to the client.</li>
+          <li>The backend controls validation and persistence logic.</li>
+          <li>Authentication can be enforced before protected data is processed.</li>
+          <li>The backend API provides a consistent contract between mobile and server.</li>
+          <li>The server-side implementation can evolve independently of the Android UI.</li>
         </ul>
 
       </section>
@@ -1006,7 +957,8 @@ HTTP response returned to Android client
         <p>
           The Liftlyf backend is built using Spring Boot. Its role is to
           expose application services through APIs and provide a server-side
-          boundary for business logic and persistent data access.
+          boundary for business logic, authentication and persistent data
+          access.
         </p>
 
         <div class="flow">
@@ -1028,25 +980,25 @@ Response DTO / HTTP Response
         <h3>Controller Layer</h3>
 
         <p>
-          Controllers define the API boundary. They receive requests,
-          validate or map incoming data and delegate business operations
-          to the service layer.
+          Controllers define the HTTP API boundary. They receive requests,
+          map incoming data and delegate application operations to the
+          appropriate backend service layer.
         </p>
 
         <h3>Service Layer</h3>
 
         <p>
-          The service layer represents the natural location for server-side
-          business logic. This keeps controllers focused on HTTP concerns
-          rather than application rules.
+          The service layer contains server-side application logic and
+          coordinates operations between the API boundary and the persistence
+          layer.
         </p>
 
         <h3>Persistence Layer</h3>
 
         <p>
           Database access is separated from higher-level application logic.
-          This separation improves maintainability and keeps SQL or
-          persistence concerns isolated from API and business logic.
+          This keeps persistence concerns isolated from API handling and
+          backend business operations.
         </p>
 
       </section>
@@ -1059,45 +1011,37 @@ Response DTO / HTTP Response
         <h2>07. Authentication & Security</h2>
 
         <p>
-          The backend uses Spring Security as the foundation for protecting
-          application resources. JWT-based authentication provides a
-          mechanism for authenticated clients to prove identity when calling
-          protected endpoints.
+          The backend uses Spring Security to protect application resources.
+          JWT-based authentication provides a mechanism for authenticated
+          clients to prove their identity when accessing protected backend
+          endpoints.
         </p>
 
-        <h3>Conceptual Authentication Flow</h3>
+        <h3>Authentication Flow</h3>
 
         <div class="flow">
 User authenticates
       ↓
 Backend validates credentials
       ↓
-Backend issues authentication token
+Authentication token is issued
       ↓
-Client sends token with protected requests
+Client includes token with protected requests
       ↓
-Backend security layer validates token
+Spring Security validates request authentication
       ↓
-Authenticated request continues
-        </div>
-
-        <div class="warning callout">
-
-          Implementation details such as token expiration, refresh-token
-          support and the exact client-side storage mechanism should be
-          documented according to the actual Liftlyf implementation rather
-          than assumed.
-
+Authorized request continues to backend services
         </div>
 
         <h3>Security Responsibilities</h3>
 
         <ul>
-          <li>Authentication of users.</li>
+          <li>User authentication.</li>
           <li>Protection of authenticated API endpoints.</li>
           <li>Validation of authentication tokens.</li>
-          <li>Authorization rules where applicable.</li>
-          <li>Separation of public and protected resources.</li>
+          <li>Authorization of protected requests.</li>
+          <li>Separation of public and authenticated resources.</li>
+          <li>Keeping direct database access away from the mobile client.</li>
         </ul>
 
       </section>
@@ -1110,35 +1054,60 @@ Authenticated request continues
         <h2>08. Database Architecture</h2>
 
         <p>
-          PostgreSQL is used as the backend relational database. Relational
-          storage is suitable for structured application data and
-          relationships between application entities.
+          Liftlyf uses two distinct persistence layers for different
+          environments. Room provides structured local persistence on the
+          Android device, while PostgreSQL provides persistent relational
+          storage for backend-managed data.
         </p>
 
-        <h3>Typical Data Relationships</h3>
+        <div class="architecture">
+
+          <div class="layer">
+            Android Application
+          </div>
+
+          <div class="arrow">↓</div>
+
+          <div class="layer">
+            Room
+            <br>
+            <small>Local Device Database</small>
+          </div>
+
+          <div class="arrow">↕</div>
+
+          <div class="layer">
+            Synchronization API
+          </div>
+
+          <div class="arrow">↕</div>
+
+          <div class="layer">
+            PostgreSQL
+            <br>
+            <small>Remote Backend Database</small>
+          </div>
+
+        </div>
+
+        <h3>Conceptual Data Relationships</h3>
 
         <div class="flow">
 User
   ↓
 Workout
   ↓
-Workout Exercise
+Exercises Performed
   ↓
-Exercise Sets
-
-Example logical relationship:
-
-User
-  └── Workouts
-        └── Exercises performed
-              └── Individual sets / repetitions / weight
+Individual Sets
+  ↓
+Training Data
         </div>
 
         <p>
-          The exact schema should be treated as an implementation detail and
-          should evolve with application requirements. The important
-          architectural principle is maintaining clear ownership and
-          relationships between persistent entities.
+          A relational database structure is well suited for storing
+          structured workout information and the relationships between users,
+          workouts, exercises and training records.
         </p>
 
         <h3>Local vs Server Storage</h3>
@@ -1148,16 +1117,16 @@ User
           <div class="card">
             <h3>Room</h3>
             <p>
-              Provides structured on-device storage for Android application
-              data and local persistence.
+              Supports structured, locally available workout data on the
+              Android device.
             </p>
           </div>
 
           <div class="card">
             <h3>PostgreSQL</h3>
             <p>
-              Provides persistent relational storage for backend-managed
-              application data.
+              Provides persistent server-side relational storage accessed
+              through the Liftlyf backend.
             </p>
           </div>
 
@@ -1177,22 +1146,50 @@ User
           Oracle Cloud Infrastructure.
         </p>
 
+        <h3>Domain & Network Layer</h3>
+
+        <p>
+          The Liftlyf domain, <strong>liftlyf.com</strong>, is managed
+          through Cloudflare and provides the public domain layer for
+          Liftlyf services. DNS configuration connects Liftlyf services
+          to infrastructure running on Oracle Cloud.
+        </p>
+
+        <p>
+          The backend itself is hosted on an Oracle Cloud VM, where the
+          Spring Boot application runs inside a Docker container.
+          Cloudflare and Oracle Cloud therefore serve different
+          responsibilities: Cloudflare manages the public domain and
+          DNS layer, while Oracle Cloud provides the compute infrastructure
+          used to run the backend.
+        </p>
+
+        <h3>Runtime Infrastructure</h3>
+
         <div class="architecture">
 
           <div class="layer">
-            Source Code Repository
+            Android Application
           </div>
 
           <div class="arrow">↓</div>
 
           <div class="layer">
-            Backend Build
+            liftlyf.com
           </div>
 
           <div class="arrow">↓</div>
 
           <div class="layer">
-            Docker Image
+            Cloudflare
+            <br>
+            <small>Domain & DNS</small>
+          </div>
+
+          <div class="arrow">↓</div>
+
+          <div class="layer">
+            Oracle Cloud Infrastructure
           </div>
 
           <div class="arrow">↓</div>
@@ -1204,13 +1201,19 @@ User
           <div class="arrow">↓</div>
 
           <div class="layer">
-            Running Docker Container
+            Docker Container
           </div>
 
           <div class="arrow">↓</div>
 
           <div class="layer">
-            Hosted Backend API
+            Spring Boot Backend
+          </div>
+
+          <div class="arrow">↓</div>
+
+          <div class="layer">
+            PostgreSQL Database
           </div>
 
         </div>
@@ -1219,18 +1222,18 @@ User
 
         <ul>
           <li>Provides a consistent runtime environment.</li>
-          <li>Reduces differences between development and deployment environments.</li>
-          <li>Packages application dependencies with the application.</li>
-          <li>Simplifies deployment and replacement of backend versions.</li>
+          <li>Packages the backend with its runtime dependencies.</li>
+          <li>Reduces differences between development and deployment.</li>
+          <li>Simplifies repeatable backend deployment.</li>
+          <li>Allows backend versions to be deployed as container images.</li>
         </ul>
 
-        <h3>Cloud Infrastructure</h3>
+        <h3>Cloud Hosting</h3>
 
         <p>
-          Hosting the backend on a cloud VM moves Liftlyf beyond a purely
-          local development environment. The backend can run independently
-          of the developer's local machine and serve remote application
-          clients.
+          Hosting the backend on an Oracle Cloud VM allows Liftlyf services
+          to run independently from a local development machine and be
+          accessed remotely by application clients.
         </p>
 
       </section>
@@ -1264,10 +1267,11 @@ Updated application or backend
         <h3>Automation Goals</h3>
 
         <ul>
-          <li>Reduce manual repetitive work.</li>
+          <li>Reduce repetitive manual work.</li>
           <li>Standardize build processes.</li>
           <li>Make deployment more repeatable.</li>
-          <li>Create a foundation for future automated testing.</li>
+          <li>Create a foundation for automated testing.</li>
+          <li>Improve consistency between development and deployment.</li>
         </ul>
 
       </section>
@@ -1282,40 +1286,48 @@ Updated application or backend
         <h3>Native Android Development</h3>
 
         <p>
-          Kotlin and Jetpack Compose provide a modern native Android stack.
-          This allows Liftlyf to use platform-native APIs while maintaining
-          a declarative UI architecture.
+          Kotlin and Jetpack Compose provide a modern native Android
+          development stack while allowing Liftlyf to integrate directly
+          with Android platform capabilities.
+        </p>
+
+        <h3>Local-First Data</h3>
+
+        <p>
+          Room provides locally persisted data that can support a responsive
+          application experience without requiring every user interaction to
+          wait for a backend request.
         </p>
 
         <h3>Client-Server Separation</h3>
 
         <p>
-          A dedicated backend prevents all application logic and persistence
-          concerns from being embedded directly inside the mobile client.
-          The client and server can therefore evolve independently.
+          A dedicated backend separates mobile application concerns from
+          server-side business logic, authentication and database access.
         </p>
 
-        <h3>Local Persistence</h3>
+        <h3>API-Based Synchronization</h3>
 
         <p>
-          Using Room creates a structured approach to on-device data
-          persistence and supports an architecture where application state
-          does not depend exclusively on temporary memory.
+          The synchronization API provides a controlled interface between
+          the Android application's local data and the PostgreSQL database.
+          The mobile client communicates with the backend rather than
+          directly accessing server-side infrastructure.
         </p>
 
         <h3>Containerized Backend</h3>
 
         <p>
-          Docker provides a reproducible runtime environment and makes the
-          backend easier to package and deploy.
+          Docker provides a reproducible runtime environment for backend
+          deployment on the Oracle Cloud VM.
         </p>
 
-        <h3>Cloud Hosting</h3>
+        <h3>Cloud Infrastructure</h3>
 
         <p>
-          Running the backend on Oracle Cloud introduces production-style
-          infrastructure concerns such as server availability, networking,
-          deployment and operational maintenance.
+          Oracle Cloud provides the compute infrastructure required to run
+          the backend remotely, while Cloudflare provides the public domain
+          and DNS layer for Liftlyf services.
         </p>
 
       </section>
@@ -1328,9 +1340,9 @@ Updated application or backend
         <h2>12. Future Engineering Roadmap</h2>
 
         <p>
-          Liftlyf will continue evolving beyond the initial production
-          version. Planned areas include both product features and technical
-          improvements.
+          Liftlyf will continue evolving beyond its initial release. Future
+          work includes both user-facing functionality and continued
+          improvements to the underlying engineering platform.
         </p>
 
         <div class="card-grid">
@@ -1339,15 +1351,15 @@ Updated application or backend
             <h3>Progress Analytics</h3>
             <p>
               Visualizations and data analysis for long-term training
-              history.
+              history and performance trends.
             </p>
           </div>
 
           <div class="card">
             <h3>Cardio & Timers</h3>
             <p>
-              Additional workout modes, rest timers and cardio-focused
-              tracking.
+              Additional workout modes, cardio tracking and configurable
+              workout or rest timers.
             </p>
           </div>
 
@@ -1361,24 +1373,24 @@ Updated application or backend
           <div class="card">
             <h3>AI Features</h3>
             <p>
-              Future intelligent features to support users with training
-              insights and assistance.
-            </p>
-          </div>
-
-          <div class="card">
-            <h3>Infrastructure</h3>
-            <p>
-              Continued improvements to monitoring, reliability and
-              deployment automation.
+              Future intelligent features to provide training insights and
+              assistance.
             </p>
           </div>
 
           <div class="card">
             <h3>Observability</h3>
             <p>
-              Better application logging, error reporting and backend
-              monitoring.
+              Improved backend logging, error reporting, crash analysis and
+              application monitoring.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>Infrastructure</h3>
+            <p>
+              Continued improvements to deployment automation, reliability,
+              security and production infrastructure.
             </p>
           </div>
 
@@ -1386,9 +1398,9 @@ Updated application or backend
 
         <div class="callout">
 
-          Liftlyf is intended to remain an evolving engineering project.
-          The documentation will be updated as the application architecture,
-          features and infrastructure develop.
+          Liftlyf is intended to remain an evolving full-stack engineering
+          project. This documentation will continue to expand as the
+          application architecture, infrastructure and feature set evolve.
 
         </div>
 
